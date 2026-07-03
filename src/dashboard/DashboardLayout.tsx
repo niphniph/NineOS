@@ -6,6 +6,7 @@ import { AISummary } from './components/AISummary';
 import { TodayRisks, RiskItem } from './components/TodayRisks';
 import { DepartmentGrid } from './components/DepartmentGrid';
 import { DepartmentMetric } from './components/DepartmentCard';
+import { RiskManagementLayout } from '../risk-management/RiskManagementLayout';
 
 export const DashboardLayout: React.FC = () => {
   const [activePage, setActivePage] = useState<string>('dashboard');
@@ -225,6 +226,8 @@ export const DashboardLayout: React.FC = () => {
             {/* Department Cards Grid */}
             <DepartmentGrid metrics={filteredMetrics} onViewLedger={handleViewLedger} />
           </div>
+        ) : activePage === 'risk' ? (
+          <RiskManagementLayout searchQuery={searchQuery} riskScore={12} />
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px]">
             <span className="material-symbols-outlined text-6xl text-secondary mb-4">construction</span>
