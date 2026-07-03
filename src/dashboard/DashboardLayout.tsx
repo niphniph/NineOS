@@ -8,6 +8,7 @@ import { DepartmentGrid } from './components/DepartmentGrid';
 import { DepartmentMetric } from './components/DepartmentCard';
 import { RiskManagementLayout } from '../risk-management/RiskManagementLayout';
 import { CompanyMemoryLayout } from '../company-memory/CompanyMemoryLayout';
+import { SimulatorLayout } from '../simulator/SimulatorLayout';
 
 export const DashboardLayout: React.FC = () => {
   const [activePage, setActivePage] = useState<string>('dashboard');
@@ -246,6 +247,8 @@ export const DashboardLayout: React.FC = () => {
           <RiskManagementLayout searchQuery={searchQuery} riskScore={12} />
         ) : activePage === 'memory' ? (
           <CompanyMemoryLayout searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        ) : activePage === 'simulator' ? (
+          <SimulatorLayout />
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px]">
             <span className="material-symbols-outlined text-6xl text-secondary mb-4">construction</span>
