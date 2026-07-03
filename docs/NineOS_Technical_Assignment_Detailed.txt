@@ -1,0 +1,505 @@
+NineOS
+The AI Decision Layer for Modern Businesses
+Comprehensive Technical Assignment & Build Specification (MVP)
+Document type: Technical Assignment for AI-Assisted Development (Antigravity)
+Version 2.0 — Extended Edition
+2026
+
+Table of Contents
+
+
+
+1. Executive Summary
+NineOS is a B2B SaaS platform positioned as the “AI Decision Layer for Modern Businesses.” It is explicitly not a planner, not a task manager, not a wiki, not a CRM, and not a generic AI chatbot. Each of those product categories already has strong, well-funded incumbents (Asana, Notion, Salesforce, ChatGPT/Claude). Competing head-on with any of them on their own terms would be extremely difficult.
+Instead, NineOS connects to the tools a company already uses — Google Workspace, Slack, a project management tool, and a CRM in the MVP — and builds a Unified Company Memory: a normalized, queryable record of everything happening inside the business. On top of that memory, an AI layer continuously monitors the company, generates daily and weekly executive briefings, flags risks before they become expensive, and recommends concrete next actions. Every recommendation is transparent: it shows its reasoning, its data sources, its expected impact, and a confidence score. No recommendation executes automatically — a human must explicitly approve it.
+This document is a complete technical assignment intended to brief an AI development agent (Antigravity) to build a working MVP. It covers product vision, target users, detailed functional requirements for every module, the data model, integration specifications, AI prompt and output contracts, non-functional requirements (security, privacy, performance), a phased build plan, and acceptance criteria.
+Core principle to keep in mind throughout the build: “NineOS never replaces human judgment. It augments it.” AI proposes; humans decide.
+
+2. Vision, Positioning, and Strategic Context
+2.1 The Problem
+Modern companies run on dozens of disconnected tools: communication (Slack, email), documentation (Notion, Confluence), project management (Asana, Jira, Monday, ClickUp), CRM and revenue tools (Salesforce, HubSpot), finance (QuickBooks, Xero, Stripe), HR/workforce systems (Rippling, Deel), and general-purpose AI assistants (ChatGPT, Claude, Copilot, Gemini).
+Each tool does its specific job well. The problem is not tool quality — it is fragmentation:
+Information about the same business reality is scattered across ten or more systems.
+Leaders spend hours manually collecting status updates before they can make a decision.
+Departments operate in silos with limited visibility into each other.
+AI assistants like ChatGPT or Claude are excellent reasoners but have no persistent context about what is actually happening in the company — they wait for a prompt.
+Dashboards show numbers, but numbers alone do not say what should be done next.
+Risks (churn, burnout, budget overruns, missed deadlines) are frequently discovered too late to act on cheaply.
+In short: companies have plenty of data, but no system that turns that data into decisions. Existing tools are largely “systems of record” (they store information). NineOS aims to be a “system of decisions” (it interprets information and proposes what to do about it).
+2.2 Why Not Build “Another Asana” or “Another Notion”
+Asana, Notion, Monday, and similar tools have years of head start, deep integrations, and large user bases. Competing as “a better task manager” or “a better wiki” would force NineOS into a feature race it cannot win quickly. Likewise, competing as “a better chatbot” against ChatGPT or Claude ignores that those products already have superior general-purpose reasoning — NineOS's edge is not a better language model, it is persistent company context plus a decision-oriented workflow that those products structurally do not provide.
+The strategic choice made for this project is therefore an Integration-First, Replacement-Later approach: in the early phases, NineOS does not try to replace any existing tool. It connects to existing tools, becomes useful as an intelligence layer above them, and only much later (post-MVP, multi-year roadmap) considers replacing the most frequently used functionality (e.g., lightweight task tracking, meeting notes).
+2.3 Product Category and Naming
+Product name: NineOS.
+Primary slogan: “NineOS — The AI Decision Layer for Modern Businesses.”
+Alternative slogans (for marketing copy, not required in-app):
+Where your company thinks before it acts.
+Turn company data into better decisions.
+The AI brain for business operations.
+From scattered work to intelligent decisions.
+Your company's memory, intelligence, and execution layer.
+Category to use in all positioning copy: “AI Decision Intelligence Platform” or “AI Operating System for Business Leadership.” Avoid framing NineOS as a planner, task manager, or chatbot in any user-facing copy generated during the build.
+2.4 Four-Pillar Competitive Differentiation
+Individually, competitors already have pieces of this. The differentiated bet is combining all four pillars in one product:
+Pillar
+What it means
+Why it matters
+Unified Company Memory
+Every meeting, task, email, deal, decision and document becomes one connected context the AI can query.
+AI never starts from zero; no repeated explaining.
+Continuous Decision Intelligence
+The AI proactively monitors operations and raises issues without being asked.
+Replaces manual status-gathering and dashboard-staring.
+Business Simulation Engine
+Leaders can ask “what if…?” and get a data-grounded estimate.
+Supports decisions before they are made, not just after.
+Cross-Functional AI
+Sales, marketing, finance, HR, engineering, and customer success are reasoned about together, not in separate silos.
+Most competitors are department-specific (CRM-centric, HR-centric, etc.).
+2.5 Competitive Landscape Snapshot
+Competitor
+Strength
+Gap NineOS targets
+ChatGPT / Claude / Copilot / Gemini
+Best-in-class general reasoning, writing, coding.
+No persistent company context; purely prompt-driven.
+Notion / Confluence
+Excellent knowledge base and documentation.
+Stores knowledge; does not recommend decisions.
+Asana / Monday / ClickUp / Trello
+Mature task and workflow management.
+Tracks what work exists, not whether it should exist.
+Salesforce (incl. Agentforce)
+Deep CRM and revenue operations.
+Centered on CRM context only, not whole-company context.
+Rippling / Deel
+Strong HR, payroll, IT, workforce data.
+Workforce-centric, not cross-functional business intelligence.
+HubSpot
+Strong marketing/CRM bundle.
+Marketing/sales-centric, same limitation as Salesforce.
+NineOS's positioning is therefore not “we have AI too,” but “we turn your company's scattered data into decisions, across every department, continuously, with full transparency and human approval.”
+
+3. Non-Negotiable Product Principles
+These principles must be reflected in the architecture and UI, not just in marketing copy. The build agent should treat violations of these as bugs.
+3.1 Company Memory, Not Another Inbox
+Every connected source is normalized into one timeline/graph the AI can query. The AI should never need the user to re-explain context that already exists in connected systems.
+3.2 Continuous Intelligence, Not Prompt-Waiting
+The product's core value loop is proactive: a scheduled brief is generated automatically. Chat-style Q&A can exist as a secondary feature, but it is not the primary interaction model.
+3.3 Recommendations, Not Autonomous Decisions
+This is the single most important constraint in the entire assignment. The product must never let AI autonomously perform high-risk, hard-to-reverse actions, including but not limited to:
+Terminating or disciplining an employee
+Changing compensation or payroll
+Changing prices charged to customers
+Spending money (ad budgets, purchases, vendor payments)
+Cancelling or deleting a project, account, or customer record
+Sending external communications without a human-reviewed approval step (for MVP, all outbound messages triggered by an approved recommendation should be reviewable before sending, or sent to an internal channel rather than directly to a customer)
+Every AI output that implies an action must be presented as a Recommendation object with mandatory fields: recommendation text, reasoning, source data references, expected impact, and a confidence score (see Section 8.4 for the exact schema). The user must explicitly Approve or Ignore it. Approving a recommendation may trigger a safe, reversible follow-up action (e.g., creating a task, posting an internal Slack message) — never an irreversible one.
+3.4 Role-Based Views
+Executives, managers, and contributors see different things, by design (see Section 7 for full detail on each role's dashboard). This must be modeled in the data layer (a `role` field on `User`, and permission checks in the API) from the very first commit, even if the contributor-level UI is reduced in scope for MVP.
+3.5 Integration-First Architecture
+All external systems are accessed through a common Connector abstraction (see Section 6). The rest of the application must never depend on a specific vendor's API shape directly — it depends only on the normalized internal schema. This is what allows new integrations to be added later without rewriting the AI layer, the dashboards, or the data model.
+3.6 Transparency and Trust by Default
+Every AI-generated artifact (brief, risk alert, recommendation) must visibly show what data it is based on. There is no “black box” output anywhere in the product. If the AI cannot point to source data for a claim, it should not make that claim.
+
+4. Target Users, Buyers, and Personas
+4.1 Buyer vs. User
+NineOS is bought by leadership but used by the whole company — the same pattern as Salesforce (bought by the CEO/COO/CRO, used by sales, support, marketing, and finance). This distinction matters for both the sales motion and the product design: the dashboard experience for the buyer (executive) must deliver value on day one, even before every department is onboarded.
+4.2 Primary Personas
+Persona
+Role tier
+What they need from NineOS
+CEO / Founder
+Executive
+Company-wide health, risks, daily/weekly brief, AI recommendations, simulation.
+COO
+Executive
+Operations, execution, cross-team capacity, meeting load.
+CFO
+Executive
+Budget, cash runway, forecasts, financial risk signals.
+CTO / Eng. Manager
+Manager
+Sprint health, velocity, delivery risk, team capacity.
+Sales Manager
+Manager
+Pipeline, forecast, win rate, rep performance.
+Marketing Manager
+Manager
+Campaign ROI, CAC, lead quality, budget allocation.
+HR Manager
+Manager
+Hiring pipeline, retention, burnout risk signals.
+Customer Success Manager
+Manager
+Account health, churn risk, renewals, expansion signals.
+Individual Contributor
+Contributor
+Personal tasks, meeting follow-ups, simplified daily view.
+4.3 Primary MVP Demo Persona
+For the MVP build, optimize the experience first for a single persona: a CEO or Founder at a company with roughly 50–300 employees who already uses Google Workspace, Slack, and one project management tool, and who currently spends multiple hours per week manually assembling “what's actually happening” across teams before making decisions. Every MVP feature should be evaluated against whether it delivers visible value to this specific persona within the first session.
+4.4 Target Company Segments (post-MVP go-to-market context)
+Not required for the build itself, but useful context for copy, sample data, and onboarding flows:
+Startups, 50–200 employees
+Scaleups, 200–1,000 employees
+Agencies and consulting firms
+SaaS companies
+Remote-first and venture-backed companies
+Operations-heavy companies already juggling many disconnected tools
+
+5. Scope Definition
+5.1 In Scope for MVP (P0 — Must Have)
+Company workspace creation, authentication, and role-based user invitations.
+Four integrations: Google Workspace, Slack, one project/task tool, one CRM (see Section 6).
+A Connector abstraction layer used by all integrations.
+Unified Company Memory: normalized event store with search and filtering.
+AI-generated Daily/Weekly Executive Brief with a strict structured output schema.
+Risk Alert detection (rule-based plus LLM-assisted).
+AI Recommendations with mandatory reasoning, sources, expected impact, and confidence score.
+Approve/Ignore workflow wired to at least one safe, reversible follow-up action.
+Role-based dashboards differentiated for at least Executive and Manager roles.
+Admin/settings page to view and disconnect integrations.
+Basic onboarding flow for a brand-new pilot company.
+5.2 In Scope but Lower Priority (P1 — Nice to Have, Build if Time Allows)
+Business Simulation Engine (“what if…?” natural-language scenario box).
+Contributor-level simplified dashboard.
+Meeting transcript ingestion and AI-generated meeting summaries (if a transcript source is available).
+Department Health Scores (Sales Health, HR Health, Finance Health, etc.) as a dedicated dashboard widget.
+Lightweight in-app chat (“Ask NineOS”) layered on top of Company Memory, for ad hoc questions.
+5.3 Explicitly Out of Scope (Do Not Build)
+These are excluded for the MVP, regardless of how interesting they may seem from the underlying research notes. Do not let the AI agent silently expand scope into any of these:
+A custom-built project/task management engine (no in-house kanban/Gantt UI to replace the connected PM tool).
+A custom-built wiki/document editor.
+Payroll processing or a full HR information system.
+A full general ledger or accounting system.
+Autonomous execution of high-risk actions (see Section 3.3).
+A native mobile application (web-first, responsive only; a mobile companion app is a future phase).
+Support for every tool mentioned in the original research notes (Jira, Monday, ClickUp, Trello, HubSpot, Salesforce, Rippling, Deel, QuickBooks, Xero, Stripe, etc. are explicitly deferred — pick exactly one PM tool and one CRM for MVP, see Section 6).
+Multi-language UI (English-only UI for MVP; the underlying data model should not block future localization, but no localization work is required now).
+Fine-tuned or custom-trained ML models. Use a general-purpose LLM API (e.g., Claude) with prompt engineering and structured output — do not attempt to train custom models for MVP.
+
+6. Integrations and Connector Architecture
+6.1 Connector Interface (mandatory abstraction)
+Every integration must be implemented behind a single shared interface so the rest of the system never depends on a specific vendor's API shape:
+Connector {
+  id: string
+  type: "google_workspace" | "slack" | "project_tool" | "crm"
+  connect(credentials: OAuthCredentials): ConnectionStatus
+  sync(sinceTimestamp?: DateTime): RawEvent[]
+  disconnect(): void
+  healthCheck(): ConnectionStatus
+}
+
+RawEvent {
+  source: string
+  externalId: string
+  payload: object   // vendor-specific raw JSON, stored but not relied upon elsewhere
+}
+A Normalizer component sits immediately downstream of every Connector and converts RawEvents into the shared internal CompanyEvent schema (Section 8.1). No other part of the application (dashboards, AI layer, risk detection) should ever read RawEvent.payload directly — they should only read CompanyEvent.
+6.2 Integration #1 — Google Workspace
+Scope for MVP:
+Google Calendar: events (title, attendees, start/end time, recurring flag).
+Gmail: message metadata (subject, sender, recipients, timestamp, thread id) and a short snippet/summary — avoid ingesting full email bodies by default for privacy; full-body ingestion should be an explicit, separately toggled setting.
+Google Meet: meeting metadata where available via Calendar (attendee list, duration); full transcript ingestion is P1, not P0.
+Auth: Google OAuth 2.0. This can double as the application's own login method to simplify onboarding.
+6.3 Integration #2 — Slack
+Scope for MVP:
+Slack OAuth app installed at the workspace level.
+Ingest messages from a configurable, explicit list of channels the admin selects during onboarding (do not default to ingesting every private channel — this is a privacy and trust requirement, not just a technical one).
+Store message text, sender, channel, timestamp, and thread relationships as CompanyEvents of type “message.”
+6.4 Integration #3 — Project/Task Tool (choose exactly one)
+Recommended default: Asana, due to a comparatively simple OAuth and REST API surface, which speeds up MVP delivery. Jira or Trello are acceptable substitutes if the pilot company already standardizes on one of them — confirm with the project owner before building (see open questions, Section 14).
+Scope for MVP:
+Projects, tasks, assignees, due dates, completion status, and task comments.
+Used both as a read source (for Company Memory and risk detection, e.g., overdue tasks) and as a write target (for the Approve action on recommendations — e.g., “create follow-up task”).
+6.5 Integration #4 — CRM (choose exactly one)
+Recommended default: HubSpot, for a comparatively accessible developer API and sandbox/test accounts. If no real CRM account is available for testing during the build, implement a CRM Stub Connector that exposes the same interface and returns realistic synthetic data (deals, stages, amounts, last-activity dates) so the rest of the system can be built and demoed without waiting on a live account.
+Scope for MVP:
+Deals/opportunities: name, stage, amount, owner, last activity date, close date.
+Used for revenue/pipeline KPIs on the Executive dashboard and for churn/no-activity risk detection.
+6.6 Sync Strategy
+For MVP, a simple polling sync (e.g., every 15–60 minutes, plus a manual “Sync Now” button in settings) is sufficient. Real-time webhooks per integration are a valid stretch goal but not required. Each Connector should track `last_synced_at` and support incremental sync (only fetch events newer than the last successful sync) to avoid re-processing the entire history on every run.
+
+7. Roles, Permissions, and Dashboards
+7.1 Role Definitions
+Role
+Typical titles
+Default scope of visibility
+executive
+CEO, Founder, COO, CFO, CTO
+Entire company, all departments, all connected sources.
+manager
+Department heads, team leads
+Their own department/team, tagged by `department_tag`.
+contributor
+Individual employees
+Their own tasks and meetings only (P1 scope for MVP UI).
+Permission checks must be enforced at the API layer, not only hidden in the UI — a manager's API token must not be able to fetch another department's data, and a contributor's token must not be able to fetch company-wide briefs.
+7.2 Executive Dashboard
+Required widgets:
+Latest Daily/Weekly Brief (key developments, risks, recommendations).
+Company-wide KPI strip: revenue/pipeline (from CRM), task completion rate (from PM tool), meeting load (from Calendar).
+Active Risk Alerts list, sorted by severity.
+Pending Recommendations queue with Approve/Ignore actions.
+“Generate Brief Now” button (manual trigger, useful for demos and for on-demand refreshes).
+7.3 Manager Dashboard
+Same conceptual structure as the Executive view, scoped to the manager's department via `department_tag` filtering:
+Department-scoped brief (subset of the company brief, or a separately generated department-level brief — either approach is acceptable for MVP, but department scoping must be enforced).
+Department-scoped risks and recommendations.
+Team workload/capacity view (derived from task assignment density and meeting load).
+7.4 Contributor Dashboard (P1)
+If time allows: a simplified view showing only the contributor's own assigned tasks, upcoming meetings, and any meeting-follow-up items addressed to them. No company-wide or department-wide AI outputs should be shown at this tier in the MVP.
+7.5 Department Tagging
+Every CompanyEvent and every User should carry an optional `department_tag` (e.g., “sales,” “marketing,” “engineering,” “hr,” “finance,” “customer_success,” “operations”). For MVP, tagging can be derived heuristically (e.g., from the connected tool's own team/project field, or from Slack channel name) rather than requiring a separate manual classification step — but the field must exist in the schema from day one.
+
+8. Data Model
+8.1 Core Entities
+Company {
+  id: uuid
+  name: string
+  created_at: datetime
+}
+
+User {
+  id: uuid
+  company_id: uuid (FK -> Company)
+  name: string
+  email: string
+  role: "executive" | "manager" | "contributor"
+  department_tag: string | null
+  created_at: datetime
+}
+
+Connection {
+  id: uuid
+  company_id: uuid (FK -> Company)
+  type: "google_workspace" | "slack" | "project_tool" | "crm"
+  status: "connected" | "error" | "disconnected"
+  credentials_ref: string   // pointer to securely stored OAuth tokens, never plaintext in this table
+  last_synced_at: datetime | null
+  created_at: datetime
+}
+
+CompanyEvent {
+  id: uuid
+  company_id: uuid (FK -> Company)
+  source: "google_workspace" | "slack" | "project_tool" | "crm"
+  type: "meeting" | "message" | "task" | "deal" | "email"
+  title: string
+  summary: string
+  department_tag: string | null
+  raw_payload: jsonb        // original vendor payload, for audit/debugging only
+  occurred_at: datetime
+  created_at: datetime
+}
+8.2 AI Output Entities
+Brief {
+  id: uuid
+  company_id: uuid (FK -> Company)
+  department_tag: string | null   // null = company-wide
+  period: "daily" | "weekly"
+  generated_at: datetime
+  key_developments: string[]
+}
+
+Risk {
+  id: uuid
+  brief_id: uuid (FK -> Brief)
+  description: string
+  severity: "low" | "medium" | "high"
+  source_event_ids: uuid[]
+  created_at: datetime
+}
+
+Recommendation {
+  id: uuid
+  brief_id: uuid (FK -> Brief)
+  recommendation: string
+  reasoning: string
+  source_event_ids: uuid[]
+  expected_impact: string
+  confidence_score: integer (0-100)
+  status: "pending" | "approved" | "ignored"
+  approved_action_ref: string | null   // reference to the follow-up action taken, if approved
+  created_at: datetime
+  resolved_at: datetime | null
+}
+8.3 Entity Relationship Notes
+A Company has many Users, Connections, CompanyEvents, and Briefs.
+A Brief has many Risks and Recommendations, and may be scoped to the whole company or to a single department.
+A Recommendation's `source_event_ids` and a Risk's `source_event_ids` must reference real CompanyEvent rows — the UI uses these to render “why am I seeing this” source links. Never allow the AI layer to fabricate source references; validate that every id returned by the LLM actually exists before rendering it.
+Soft-delete (a `deleted_at` field) is preferred over hard delete for CompanyEvent, to preserve audit history, but hard delete must be available for compliance/right-to-erasure requests.
+8.4 Strict LLM Output Contract
+All brief-generation calls to the LLM must request and validate this exact JSON shape. If the response fails schema validation, retry once with an explicit “your previous response was invalid JSON, please correct it” follow-up before surfacing an error to the user.
+{
+  "key_developments": ["string", "..."],
+  "risks": [
+    {
+      "description": "string",
+      "severity": "low" | "medium" | "high",
+      "source_event_ids": ["uuid", "..."]
+    }
+  ],
+  "recommendations": [
+    {
+      "recommendation": "string",
+      "reasoning": "string",
+      "source_event_ids": ["uuid", "..."],
+      "expected_impact": "string",
+      "confidence_score": 0-100
+    }
+  ]
+}
+
+9. AI Layer — Detailed Functional Specification
+9.1 General AI Architecture
+Use the Anthropic Claude API (recommended model: claude-sonnet-4-6) as the reasoning engine. All prompts must request structured JSON output validated against the schemas in Section 8.4. Keep a clear separation between:
+Data preparation layer: queries Company Memory and assembles a compact, relevant context window (do not dump the entire event history into every prompt — filter by recency and relevance first).
+Prompting layer: constructs the system/user prompt, calls the LLM, and requests JSON output.
+Validation layer: parses and validates the JSON against the schema, checks that all referenced source_event_ids exist, and retries on failure.
+Persistence layer: writes the resulting Brief/Risk/Recommendation rows to the database.
+9.2 Daily/Weekly Executive Brief
+Trigger: a scheduled job (cron or queue-based) plus a manual “Generate Brief Now” button for demo and ad hoc use.
+Process:
+Query CompanyEvents for the relevant window (last 24 hours for daily, last 7 days for weekly), optionally scoped to a department_tag for manager-level briefs.
+Summarize/condense events into a compact structured context object (do not pass raw vendor payloads to the LLM — use the normalized CompanyEvent fields).
+Call the LLM with a system prompt instructing it to: identify 3–6 key developments, 1–3 risks with severity, and 1–3 recommendations with reasoning, sources, expected impact, and confidence score, strictly in the JSON shape from Section 8.4.
+Validate, persist, and render in the relevant dashboard(s).
+9.3 Risk Alerts
+Risk detection should combine two layers, not rely on the LLM alone:
+9.3.1 Rule-Based Signals (deterministic, computed in application code)
+A CRM deal with no activity in more than N days (configurable, default 14) — churn/stalled-deal signal.
+A task with a due date in the past and no status change in the same window — overdue/blocked signal.
+A project where the proportion of overdue tasks exceeds a threshold (e.g., 30%) — delivery risk signal.
+A meeting-heavy week for a given person or team (e.g., more than X hours of meetings) — meeting-load signal.
+9.3.2 LLM-Assisted Signals (qualitative, pattern-based)
+Sentiment or urgency patterns in recent Slack messages or email subjects related to a deal, project, or customer (heuristic for MVP — a dedicated sentiment classifier is not required; the LLM can be asked to flag concerning language directly).
+Cross-referencing multiple weak signals into one higher-confidence risk (e.g., a stalled deal plus a support-related Slack thread about the same customer).
+Every Risk object, regardless of which layer produced it, must conform to the same schema (description, severity, source_event_ids) so the UI does not need to special-case rule-based vs. LLM-based risks.
+9.4 AI Recommendations
+Every recommendation card rendered in the UI must show all of the following fields, with no exceptions:
+Field
+Description
+recommendation
+Short, actionable statement (e.g., “Shift 20% of budget from Campaign B to Campaign C”).
+reasoning
+Plain-language explanation of why this is recommended.
+sources
+Links/references to the specific CompanyEvents this is based on.
+expected_impact
+Qualitative or quantitative estimate of the likely effect.
+confidence_score
+0–100% score reflecting how strongly the data supports this.
+status
+pending / approved / ignored — drives the Approve/Ignore UI.
+Approve action: for MVP, approving a recommendation should trigger exactly one safe, reversible, pre-defined follow-up action — for example, creating a task in the connected PM tool, or posting a message to an internal Slack channel summarizing the approved recommendation. It must never trigger an external customer-facing action, a financial transaction, or any action listed as out-of-bounds in Section 3.3.
+Ignore action: simply marks the recommendation's status as `ignored`; no further action is taken.
+9.5 Business Simulation (“What If…?”) — P1
+A free-text input where a user poses a hypothetical (“What happens if we cut marketing budget by 20%?”). The system retrieves relevant CompanyEvents (e.g., recent marketing CRM/campaign data) and asks the LLM to produce a grounded, clearly-labeled estimate — explicitly framed as an estimate, never as a guarantee, and explicitly citing what real data (if any) it used versus general reasoning. This feature is lower priority than the Brief/Risk/Recommendation loop and can be deferred if the timeline is tight.
+9.6 Prompting Guidelines for the Build Agent
+Always request JSON-only output; instruct the model explicitly not to include any prose outside the JSON object.
+Always include the allowed CompanyEvent ids in the context so the model can only cite ids that actually exist.
+Never instruct the model to take on a tone of authority over the human (“you must,” “the company will”) — use recommend/suggest/flag language consistently, matching the product principle in Section 3.3.
+Cap the amount of raw context sent per request (summarize/condense before sending) both for cost control and because very large unfiltered context tends to produce vaguer, less useful recommendations.
+
+10. Non-Functional Requirements
+10.1 Security & Privacy
+OAuth tokens for all integrations must be stored encrypted at rest, never in plaintext in application logs or the primary events table.
+Role-based access control must be enforced server-side on every API endpoint, not just in the frontend.
+Slack ingestion must be limited to explicitly admin-selected channels (see Section 6.3) — this is a hard requirement, not a suggestion.
+Gmail ingestion defaults to metadata + snippet only; full-body ingestion requires an explicit opt-in setting.
+Provide an audit log of which user approved which recommendation and when.
+Provide a straightforward way to disconnect any integration and stop further ingestion immediately.
+Design with future SOC 2 / GDPR compliance in mind (clear data ownership per company, ability to export and delete a company's data on request), even though formal certification is out of scope for the MVP.
+10.2 Reliability
+If an LLM call fails or returns invalid JSON, retry once before surfacing a clear error state in the UI (“Brief generation failed, please try again”) — never show a broken/partial brief silently.
+If a Connector sync fails, mark the Connection status as “error” and surface this clearly on the settings page; do not fail silently.
+10.3 Performance
+Company Memory search/filter should return results within a few seconds for a demo-scale dataset (hundreds to low thousands of events) — no need to optimize for enterprise-scale volumes in the MVP.
+Brief generation can run asynchronously (background job) rather than blocking the UI; show a loading/progress state.
+10.4 Auditability and Explainability
+This is treated as a functional requirement, not just a nice-to-have, because it is core to the product's trust proposition: every AI-generated claim must be traceable to specific CompanyEvent records, and this traceability must be visible in the UI (e.g., clickable source references), not just stored in the database.
+
+11. Suggested Technical Stack
+These are recommendations, not hard requirements — defer to Antigravity's strong defaults where they conflict, but keep the architectural boundaries described in this document (Connector abstraction, normalized data model, strict LLM output schema) regardless of the specific stack chosen.
+Layer
+Recommendation
+Frontend
+React or Next.js + Tailwind CSS; role-based routing; component-based dashboards.
+Backend
+Node.js/TypeScript or Python/FastAPI REST API.
+Database
+PostgreSQL, with a jsonb column for raw vendor payloads.
+Auth
+OAuth2 for Google and Slack; Google OAuth can double as application login.
+AI
+Anthropic Claude API (claude-sonnet-4-6), structured/JSON output mode with schema validation.
+Scheduling
+Simple cron job or queue worker for periodic sync and brief generation; manual trigger button as a fallback for demos.
+Hosting
+Any cloud target supported by Antigravity; containerized (Docker) preferred for portability.
+
+12. Phased Build Plan
+Each milestone should be independently demoable. Do not move to the next milestone until the current one's acceptance criteria (Section 13) are visibly working.
+Milestone 1 — Foundation
+Company/user data model, authentication, role-based routing skeleton, empty dashboards per role (executive, manager, and a placeholder for contributor).
+Milestone 2 — Connector framework + first integration
+Build the Connector interface and Normalizer; implement the Google Workspace connector (Calendar + Gmail metadata); persist normalized CompanyEvents; verify events show up in a raw list view.
+Milestone 3 — Remaining integrations
+Slack connector (channel-scoped), the chosen PM tool connector, and the chosen CRM connector (or CRM stub).
+Milestone 4 — Company Memory UI
+Searchable, filterable timeline of all ingested events across sources, dates, and department tags.
+Milestone 5 — AI Brief Engine
+Prompt design, JSON schema validation, “Generate Brief Now” button, brief rendering UI showing key developments.
+Milestone 6 — Risk Alerts + Recommendations
+Rule-based and LLM-assisted risk detection; recommendation cards with Approve/Ignore; Approve wired to one real, safe follow-up action.
+Milestone 7 — Role differentiation & admin
+Executive vs. Manager dashboard differences via department_tag scoping; settings/admin page to view and disconnect integrations; basic onboarding flow for a new company.
+Milestone 8 (stretch / P1)
+Business Simulation “what if…?” box; Department Health Scores; Contributor dashboard; “Ask NineOS” ad hoc chat.
+
+13. Acceptance Criteria — Definition of Done for the MVP
+The MVP is considered complete when a brand-new pilot company can do all of the following, end to end, without manual database edits or developer intervention:
+Sign up, create a workspace, and invite teammates, assigning each one a role (executive, manager, or contributor).
+Connect Google Workspace, Slack, the chosen project/task tool, and the chosen CRM (or CRM stub).
+See ingested data appear in a searchable Company Memory timeline within a reasonable time after connecting (minutes, not hours).
+Click “Generate Brief” and receive a structured daily/weekly brief with key developments, risks, and recommendations, each one citing real source data drawn from the connected tools.
+Approve at least one recommendation and observe a real, safe, reversible follow-up action occur as a result (e.g., a task created in the PM tool, or a message posted to an internal Slack channel).
+Ignore at least one recommendation and confirm no action occurs and its status updates correctly.
+View a dashboard that differs meaningfully between the Executive role and the Manager role (different scope, at minimum via department_tag filtering).
+Disconnect an integration from the settings page and confirm the app continues to function correctly (no crashes, clear “disconnected” status, ingestion stops).
+
+14. Open Questions for the Builder to Confirm (Do Not Guess Silently)
+Which exact project/task tool will be used for the MVP and pilot — Asana, Jira, or Trello — confirm before building the connector-specific OAuth flow.
+Which exact CRM will be used — HubSpot, or another provider — or whether a synthetic CRM stub is acceptable for the initial demo.
+Whether real customer/company data will be used during early testing, or only synthetic/sample data — this materially changes how much of the security/compliance work in Section 10.1 must be hardened immediately versus deferred.
+Any hosting/infrastructure constraints or preferences (cloud provider, existing accounts, budget limits for LLM API usage during development).
+Whether the manual “Generate Brief Now” trigger is sufficient for the MVP demo, or whether a real scheduled job (e.g., every morning at a fixed time) is required from day one.
+How many sample/demo companies and connected accounts need to be prepared for a live pilot demonstration.
+
+15. Tone and Copy Guidance for Any Generated UI Text
+If the build agent generates onboarding text, empty states, button labels, or any other user-facing copy, it must follow this guidance:
+Reinforce that NineOS is the “AI Decision Layer for Modern Businesses” — never describe it as a planner, task manager, CRM, wiki, or chatbot.
+Use the phrase pattern “NineOS never replaces human judgment. It augments it” wherever a sentence about AI autonomy is needed.
+Use recommend / suggest / flag / draft language for anything the AI does. Avoid decide / execute / act language for the AI itself — those verbs belong to the human user.
+When comparing NineOS to a competitor in any generated copy, use a contrast pattern, e.g.: “ChatGPT answers questions. NineOS understands your company.” / “Notion stores knowledge. NineOS turns knowledge into decisions.” / “Asana tracks tasks. NineOS tells you which work matters.”
+
+Appendix A — Glossary
+Term
+Meaning in this document
+Company Memory
+The normalized, queryable store of all ingested CompanyEvents for a given company.
+Connector
+The abstraction layer that integrates with one external tool and emits normalized events.
+Brief
+An AI-generated periodic summary containing key developments, risks, and recommendations.
+Recommendation
+A specific AI-suggested action with reasoning, sources, expected impact, and confidence.
+Risk
+An AI- or rule-detected issue with a severity level and supporting source events.
+Approve / Ignore
+The mandatory human-in-the-loop workflow for every recommendation.
+department_tag
+A label used to scope data and dashboards to a specific team/department.
+Appendix B — Source Material
+This technical assignment distills and restructures a longer set of product-strategy notes exploring the “AI COO / AI Operating System” concept, competitive analysis against ChatGPT, Claude, Notion, Asana, Monday, Salesforce/Agentforce, Rippling and HubSpot, a market research template, a problem statement, and a pricing exploration. Pricing, go-to-market, and long-term roadmap details from those notes are retained as strategic context (Section 2) but are intentionally excluded from the build scope itself, since this document's purpose is to brief a development agent on what to build, not how to sell or price it.
