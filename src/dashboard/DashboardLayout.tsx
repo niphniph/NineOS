@@ -7,6 +7,7 @@ import { TodayRisks, RiskItem } from './components/TodayRisks';
 import { DepartmentGrid } from './components/DepartmentGrid';
 import { DepartmentMetric } from './components/DepartmentCard';
 import { RiskManagementLayout } from '../risk-management/RiskManagementLayout';
+import { CompanyMemoryLayout } from '../company-memory/CompanyMemoryLayout';
 
 export const DashboardLayout: React.FC = () => {
   const [activePage, setActivePage] = useState<string>('dashboard');
@@ -171,6 +172,20 @@ export const DashboardLayout: React.FC = () => {
       d.biggestRisk.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const ninoProfile = {
+    name: 'Nino Rossi',
+    role: 'Chief Executive',
+    avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuACIA7rsBQI_80Encue8UPkDZ_Xiysvpy7UhiFTRcQ0one5UXYfvytnPoFdDlA1Msw988iHznOmNaBK5qTagps1pTSJdqi4MgoXfDaCRreCLSq5ByVPQTYUUTHta4NOiyo2TD6cAyoHq4HBRWYwLW1YwbOlO5ijpaY7hdgWWmDTH69arf4DcrWB9kmmEVHZWw2yvd6r_CbFRI_UEMA_vR-dCI2EukF7b5AySu190q-4C7hUMIVazm90LDSW1EEZ5I9QubMJiYZ6gKI',
+  };
+
+  const marcusProfile = {
+    name: 'Marcus Sterling',
+    role: 'CSO',
+    avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCqRJDaesx54U6eU2jHGBVci6dUYqlF1I9y6EzqTtTa6vihC0rgPV-Uuup7Ul2jdjjoAJLHGCs65eofUmcQanus2QT2qdyMf-s8eK2LDn8vKc5QXlfDXdxkMz-leBflm5pWGB0lkupj2FCQDhEJ3PVR69iwZVpEkO1O7QMyc3vEgnA07-Nk6XDOLKNW0pL6FIKmll6T-4ulS_J1ccohREzKuZnqeQg3U4ncxIjJWwCBuH4SQyKcatR3Lvlw7_plkGBj9ZEQBZUBiPY',
+  };
+
+  const activeProfile = activePage === 'memory' ? marcusProfile : ninoProfile;
+
   return (
     <div className="font-body-md text-body-md bg-background text-on-background overflow-x-hidden min-h-screen">
       {/* Sidebar Navigation */}
@@ -178,6 +193,7 @@ export const DashboardLayout: React.FC = () => {
         activePage={activePage}
         setActivePage={setActivePage}
         onNewSimulation={handleNewSimulation}
+        userProfile={activeProfile}
       />
 
       {/* Top Header Bar */}
@@ -228,6 +244,8 @@ export const DashboardLayout: React.FC = () => {
           </div>
         ) : activePage === 'risk' ? (
           <RiskManagementLayout searchQuery={searchQuery} riskScore={12} />
+        ) : activePage === 'memory' ? (
+          <CompanyMemoryLayout searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px]">
             <span className="material-symbols-outlined text-6xl text-secondary mb-4">construction</span>

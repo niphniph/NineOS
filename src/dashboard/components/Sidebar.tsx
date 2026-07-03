@@ -1,16 +1,28 @@
 import React from 'react';
 import { Button } from './Button';
 
+export interface UserProfile {
+  name: string;
+  role: string;
+  avatarUrl: string;
+}
+
 interface SidebarProps {
   activePage?: string;
   setActivePage?: (page: string) => void;
   onNewSimulation?: () => void;
+  userProfile?: UserProfile;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
   activePage = 'dashboard',
   setActivePage,
   onNewSimulation,
+  userProfile = {
+    name: 'Nino Rossi',
+    role: 'Chief Executive',
+    avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuACIA7rsBQI_80Encue8UPkDZ_Xiysvpy7UhiFTRcQ0one5UXYfvytnPoFdDlA1Msw988iHznOmNaBK5qTagps1pTSJdqi4MgoXfDaCRreCLSq5ByVPQTYUUTHta4NOiyo2TD6cAyoHq4HBRWYwLW1YwbOlO5ijpaY7hdgWWmDTH69arf4DcrWB9kmmEVHZWw2yvd6r_CbFRI_UEMA_vR-dCI2EukF7b5AySu190q-4C7hUMIVazm90LDSW1EEZ5I9QubMJiYZ6gKI',
+  },
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -81,13 +93,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <div className="mt-4 px-4 flex items-center gap-3 border-t border-outline-variant pt-4">
           <img
-            alt="Nino Rossi"
-            className="w-10 h-10 rounded-none bg-surface-dim border border-primary-fixed-dim"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuACIA7rsBQI_80Encue8UPkDZ_Xiysvpy7UhiFTRcQ0one5UXYfvytnPoFdDlA1Msw988iHznOmNaBK5qTagps1pTSJdqi4MgoXfDaCRreCLSq5ByVPQTYUUTHta4NOiyo2TD6cAyoHq4HBRWYwLW1YwbOlO5ijpaY7hdgWWmDTH69arf4DcrWB9kmmEVHZWw2yvd6r_CbFRI_UEMA_vR-dCI2EukF7b5AySu190q-4C7hUMIVazm90LDSW1EEZ5I9QubMJiYZ6gKI"
+            alt={userProfile.name}
+            className="w-10 h-10 rounded-full object-cover bg-surface-dim border border-primary-fixed-dim"
+            src={userProfile.avatarUrl}
           />
           <div>
-            <p className="font-label-md text-label-md font-bold text-primary">Nino Rossi</p>
-            <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">Chief Executive</p>
+            <p className="font-label-md text-label-md font-bold text-primary truncate max-w-[140px]">{userProfile.name}</p>
+            <p className="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">{userProfile.role}</p>
           </div>
         </div>
       </div>
